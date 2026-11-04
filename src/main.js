@@ -1,15 +1,12 @@
 import './style.css';
 import { generatePuzzle, evaluate, rotate, kstDate } from './puzzle.js';
+import { watchKstDay } from './daily.js';
+import { normalizeSave, recordWin } from './save.js';
 
 const STORAGE_KEY = 'circuit-bloom.v1';
 function readSave() {
   try {
-    const data = JSON.parse(localStorage.getItem(STORAGE_KEY)) ?? {};
-    return {
-      level: Number.isInteger(data.level) && data.level > 0 ? Math.min(data.level, 999) : 1,
-      records: data.records && typeof data.records === 'object' && !Array.isArray(data.records) ? data.records : {},
-      sound: data.sound === true,
-    };
+    return normalizeSave(JSON.parse(localStorage.getItem(STORAGE_KEY)));
   } catch { return { level: 1, records: {}, sound: false }; }
 }
 const save = readSave();
@@ -93,9 +90,10 @@ function wires(mask) {
   return `<svg class="wires" viewBox="0 0 100 100" aria-hidden="true"><g class="wire-track">${paths.map((path) => `<path d="${path}"/>`).join('')}</g><g class="wire-light">${paths.map((path) => `<path d="${path}"/>`).join('')}</g><circle class="junction" cx="50" cy="50" r="5"/></svg>`;
 }
 
-function newPuzzle(showTitle = false) {
+function newPuzzle(showTitle = false, moveFocus = true) {
+  const today = kstDate();
   const size = mode === 'daily' ? 5 : level < 4 ? 4 : level < 12 ? 5 : 6;
-  const seed = mode === 'daily' ? `daily:${kstDate()}` : `garden:${level}`;
+  const seed = mode === 'daily' ? `daily:${today}` : `garden:${level}`;
   puzzle = generatePuzzle(seed, size);
   masks = [...puzzle.masks];
   turns = new Array(masks.length).fill(0);
@@ -117,7 +115,7 @@ function newPuzzle(showTitle = false) {
   $('#campaign-mode').setAttribute('aria-pressed', String(mode === 'campaign'));
   $('#daily-mode').setAttribute('aria-pressed', String(mode === 'daily'));
   $('#garden-category').textContent = mode === 'daily' ? 'THE DAILY GARDEN' : 'YOUR GARDEN';
-  $('#garden-title').textContent = mode === 'daily' ? kstDate().replaceAll('-', '.') : `정원 ${String(level).padStart(2, '0')}`;
+  $('#garden-title').textContent = mode === 'daily' ? today.replaceAll('-', '.') : `정원 ${String(level).padStart(2, '0')}`;
   $('#grid-label').textContent = `${size} × ${size}`;
   $('#total').textContent = ` / ${size * size}`;
   $('#par').textContent = puzzle.par;
@@ -129,10 +127,26 @@ function newPuzzle(showTitle = false) {
   $('#message-text').textContent = mode === 'daily' ? '오늘의 회로는 모두에게 같아요. 내일은 또 다른 정원이 기다리고 있어요.' : '빛나는 시작점에서부터 선을 이어 보세요. 연결된 회로는 연둣빛으로 물들어요.';
   $('#pause').textContent = '일시정지 Ⅱ';
   update();
-  if (!showTitle) focusBoard();
+  if (!showTitle && moveFocus) focusBoard();
+}
+
+function refreshDailyPuzzle() {
+  if (mode !== 'daily' || puzzle.seed === `daily:${kstDate()}`) return false;
+  const dialogOpen = $('#help-dialog').open;
+  const wasPaused = state === 'paused' || (dialogOpen && preHelpState === 'paused');
+  const focusedTile = tiles.indexOf(document.activeElement);
+  newPuzzle(false, false);
+  if (wasPaused) pause();
+  if (dialogOpen) { state = 'help'; preHelpState = wasPaused ? 'paused' : 'playing'; }
+  else if (!wasPaused && focusedTile >= 0) { focusIndex = focusedTile; focusBoard(); }
+  $('#message-title').textContent = '새로운 오늘의 정원이 열렸어요.';
+  $('#message-text').textContent = '한국 시간 자정이 지나 새 회로로 바뀌었어요. 오늘의 빛을 이어 보세요.';
+  $('#announcer').textContent = '한국 날짜가 바뀌어 새로운 오늘의 정원을 열었어요.';
+  return true;
 }
 
 function turnTile(index) {
+  if (refreshDailyPuzzle()) return;
   if (state !== 'playing' || index === puzzle.source) return;
   masks[index] = rotate(masks[index]);
   turns[index] += 1;
@@ -160,10 +174,7 @@ function update() {
 
 function win() {
   state = 'won';
-  const previousBest = save.records[puzzle.seed];
-  const isBest = !usedHint && (!Number.isFinite(previousBest) || moves < previousBest);
-  if (isBest) save.records[puzzle.seed] = moves;
-  if (mode === 'campaign') save.level = Math.max(save.level, Math.min(level + 1, 999));
+  const isBest = recordWin(save, { seed: puzzle.seed, moves, usedHint, mode, level });
   persist();
   $('#best').textContent = Number.isFinite(save.records[puzzle.seed]) ? `${save.records[puzzle.seed]}회` : '—';
   $('#message-card').classList.add('won');
@@ -189,7 +200,7 @@ function pause() {
   $('#resume').focus();
   $('#pause').textContent = '계속하기 ▷';
 }
-function resume() { state = 'playing'; $('#overlay').classList.add('hidden'); $('#pause').textContent = '일시정지 Ⅱ'; focusBoard(); }
+function resume() { refreshDailyPuzzle(); state = 'playing'; $('#overlay').classList.add('hidden'); $('#pause').textContent = '일시정지 Ⅱ'; focusBoard(); }
 
 function help() {
   preHelpState = state;
@@ -210,6 +221,7 @@ $('#reset').addEventListener('click', () => { if ($('#help-dialog').open) return
 $('#next').addEventListener('click', () => { mode = 'campaign'; level = save.level; newPuzzle(); });
 $('#pause').addEventListener('click', () => state === 'paused' ? resume() : state === 'title' ? start() : pause());
 $('#hint').addEventListener('click', () => {
+  if (refreshDailyPuzzle()) return;
   if (state !== 'playing') return;
   const index = masks.findIndex((mask, i) => i !== puzzle.source && mask !== puzzle.solution[i]);
   if (index < 0) return;
@@ -245,10 +257,11 @@ window.addEventListener('keydown', (event) => {
   if (event.code === 'KeyM') $('#sound').click();
   if (event.code === 'KeyP' || event.code === 'Escape') { event.preventDefault(); state === 'paused' ? resume() : pause(); }
 });
-document.addEventListener('visibilitychange', () => { if (document.hidden) pause(); });
-
 setSound();
 newPuzzle(true);
+const dailyClock = watchKstDay(refreshDailyPuzzle);
+document.addEventListener('visibilitychange', () => { if (document.hidden) pause(); else dailyClock.check(); });
+window.addEventListener('focus', dailyClock.check);
 if (import.meta.env.DEV) window.__game = {
   get puzzle() { return puzzle; }, get masks() { return masks; }, get state() { return state; },
   get moves() { return moves; }, start, turnTile, newPuzzle,

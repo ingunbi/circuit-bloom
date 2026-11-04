@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Circuit Bloom · 브라우저 회귀 확인</title>
+    <style>
+      #test-controls{position:relative;z-index:10;padding:14px;background:#fff;color:#111;font:14px sans-serif;display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+      #test-controls button{padding:8px;color:#111}
+    </style>
+  </head>
+  <body>
+    <nav id="test-controls" aria-label="회귀 확인 도구">
+      <strong>테스트 전용 시계 · <output id="test-date"></output></strong>
+      <button id="next-day">한국 날짜 하루 넘기기</button>
+      <button id="timer-midnight">타이머로 자정 넘기기</button>
+      <button id="tile-midnight">타일 포커스에서 날짜 넘기기</button>
+      <button id="help-midnight">도움말 중 날짜 넘기기</button>
+      <button id="restart">테스트 진도 초기화</button>
+      <button id="level-999">999단계로 테스트</button>
+    </nav>
+    <div id="app"></div>
+    <script type="module">
+      import { millisecondsUntilNextKstDay } from '/src/daily.js';
+      // Only this development fixture overrides time. Production imports index.html.
+      const RealDate = window.Date;
+      let now = RealDate.parse('2026-11-03T14:59:59Z');
+      window.Date = class extends RealDate {
+        constructor(...args) { super(...(args.length ? args : [now])); }
+        static now() { return now; }
+      };
+      const nativeStorage = window.localStorage;
+      const key = 'circuit-bloom.browser-test';
+      Object.defineProperty(window, 'localStorage', { value: {
+        getItem() { return nativeStorage.getItem(key); },
+        setItem(_key, value) { nativeStorage.setItem(key, value); },
+      } });
+      const updateDate = () => {
+        document.querySelector('#test-date').textContent = new RealDate(now + 9 * 3600000).toISOString().replace('Z', ' KST');
+      };
+      const advanceDay = () => {
+        now += millisecondsUntilNextKstDay(new RealDate(now));
+        updateDate();
+      };
+      const nextDay = () => {
+        advanceDay();
+        window.dispatchEvent(new Event('focus'));
+      };
+      updateDate();
+      await import('/src/main.js');
+      document.querySelector('#next-day').addEventListener('click', nextDay);
+      document.querySelector('#timer-midnight').addEventListener('click', advanceDay);
+      document.querySelector('#tile-midnight').addEventListener('click', () => {
+        document.querySelector('.tile').focus();
+        nextDay();
+      });
+      document.querySelector('#help-midnight').addEventListener('click', () => {
+        document.querySelector('#help').click();
+        nextDay();
+      });
+      document.querySelector('#restart').addEventListener('click', () => {
+        nativeStorage.setItem(key, JSON.stringify({ level: 1, records: {}, sound: false }));
+        location.reload();
+      });
+      document.querySelector('#level-999').addEventListener('click', () => {
+        nativeStorage.setItem(key, JSON.stringify({ level: 999, records: {}, sound: false }));
+        location.reload();
+      });
+    </script>
+  </body>
+</html>
