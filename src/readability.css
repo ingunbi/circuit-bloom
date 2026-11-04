@@ -1,0 +1,151 @@
+/* Keep the circuit central; secondary information lives in closed details. */
+:root{font-size:16px}
+body{min-width:0;font-size:16px;line-height:1.5}
+.shell{width:100%;max-width:824px;margin:0 auto;padding:0 32px 32px}
+.topbar{height:auto;min-height:72px;gap:16px;padding:12px 0}
+.brand{gap:8px;font-size:13px;letter-spacing:1.5px;flex-shrink:0}
+.brand svg{width:30px;height:30px}
+.top-actions{display:flex;align-items:center;gap:6px;margin-left:auto}
+.top-actions :is(#sound,#learn,#browse,#help){height:44px;min-width:44px;padding:0 10px;border-radius:10px;font-size:14px;white-space:nowrap}
+.tiny-label,.eyebrow,.page-orbit,.page-footer{display:none}
+.heading{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:24px 0 20px}
+.heading>div:first-child{min-width:0}
+.hero-flower{display:block;flex-shrink:0;width:48px;height:48px;margin:0;transform:rotate(8deg)}
+.hero-flower svg{display:block;width:48px;height:48px}
+.hero-flower span{display:none}
+.heading h1{font:500 28px/1.4 Arial,'Malgun Gothic',sans-serif;letter-spacing:-.8px;word-break:keep-all}
+.subtitle{margin:8px 0 0;font-size:15px;line-height:1.6;color:#b9cbbf;letter-spacing:0;word-break:keep-all}
+.game-layout{display:block}
+.garden-panel{width:100%;max-width:760px;margin:0 auto;padding:22px;border:1px solid #536d5c;border-radius:18px;box-shadow:0 12px 42px #06151622}
+.garden-toolbar{display:flex;flex-direction:row;align-items:center;justify-content:space-between;gap:16px;margin-bottom:16px;min-width:0}
+.garden-toolbar>div:first-child{display:flex;align-items:baseline;flex-wrap:wrap;gap:6px 10px;min-width:0}
+.garden-toolbar h2{font-size:22px;font-weight:500;line-height:1.4;letter-spacing:-.5px}
+#grid-label{padding:3px 8px;border:1px solid #667f5f;border-radius:7px;font-size:14px;line-height:1.5;color:#c4d7bc;white-space:nowrap}
+.mode-switch{display:flex;align-items:center;gap:4px;padding:4px;border-radius:12px;flex-shrink:0;align-self:auto}
+.mode-switch button{min-height:44px;padding:8px 12px;border-radius:8px;font-size:14px;line-height:1.4}
+.mode-switch button span{margin-left:0}
+.free-banner{display:block;margin:0 0 14px;padding:10px 14px;border-radius:10px;background:#2c4433}
+.free-banner strong{font-size:16px;line-height:1.5;font-weight:500;white-space:normal;overflow-wrap:anywhere}
+.garden-meta{margin:0 0 12px;gap:12px;font-size:13px;line-height:1.5}
+#save-status{font-size:13px;line-height:1.5;color:#bed2b4}
+
+.status-card{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));align-items:center;gap:8px;padding:12px 14px;margin:0 0 14px;border-radius:12px;background:#e9e6d4;box-shadow:none}
+.status-card .move-count{justify-content:center;align-items:baseline;gap:6px;margin:0;min-width:0}
+.status-card .move-count>span:first-child{font:500 28px/1.2 Arial,'Malgun Gothic',sans-serif;letter-spacing:-.6px;font-variant-numeric:tabular-nums}
+.status-card .move-count>span:last-child{font-size:14px;color:#52654f;white-space:nowrap}
+.status-card .progress-line{display:flex;align-items:baseline;justify-content:center;gap:7px;margin:0;font-size:14px;line-height:1.5;white-space:nowrap;color:#52654f}
+.status-card .progress-line b{font-size:18px;line-height:1.4;color:#2a4831;font-weight:500;font-variant-numeric:tabular-nums}
+.status-card .progress-line small{font-size:14px;color:#5f705b}
+.status-card .flower-progress{display:flex;align-items:center;justify-content:center;gap:7px;margin:0;padding:0;border:0;min-width:0}
+.status-card .flower-progress .little-flower{width:25px;height:25px;flex-shrink:0}
+.status-card .flower-progress>div:last-child{display:flex;flex-direction:row;align-items:baseline;gap:5px;min-width:0}
+.status-card .flower-progress b{font:500 18px/1.4 Arial,'Malgun Gothic',sans-serif;letter-spacing:0;white-space:nowrap;font-variant-numeric:tabular-nums}
+.status-card .flower-progress span{font-size:14px;color:#52654f;white-space:nowrap}
+.status-card .meter{grid-column:1/-1;height:4px;margin-top:4px}
+.board-wrap{position:relative;min-width:0}
+.board{width:100%;gap:6px;padding:10px;border-radius:12px}
+.board-controls{display:flex;justify-content:center;align-items:center;gap:8px;margin:12px 0 0;min-width:0}
+.rotation-picker{display:flex;gap:4px;padding:3px;border-radius:11px}
+.rotation-picker button{display:grid;place-items:center;min-width:44px;min-height:44px;width:44px;height:44px;padding:0;border-radius:7px;font-size:25px;line-height:1}
+#lock-mode{display:flex;align-items:center;justify-content:center;gap:6px;min-height:44px;min-width:58px;padding:0 10px;border-radius:10px;font-size:14px;line-height:1.4}
+#lock-mode>svg{width:20px;height:20px}
+#lock-mode b{min-width:14px;font-size:14px;font-variant-numeric:tabular-nums}
+.board-controls #pause{display:grid;place-items:center;min-height:44px;min-width:44px;margin-left:auto;padding:0 10px;border:1px solid #627452;border-radius:10px;background:#203a30;color:#d4e4c0;font-size:22px;line-height:1}
+.control-note{font-size:14px;line-height:1.5;margin:8px 0 12px;min-height:0;color:#bed0b4}
+.board-footer{font-size:13px;line-height:1.5;gap:12px;padding-top:12px}
+.board-footer button{font-size:14px;min-height:44px;padding:8px}
+
+.play-actions{display:grid;grid-template-columns:repeat(3,minmax(0,1fr)) 44px;gap:8px;align-items:start;margin:12px 0 0;min-width:0}
+.play-actions>button,.play-actions>details>summary{display:flex;align-items:center;justify-content:center;min-width:0;min-height:44px;padding:10px 8px;border:1px solid #627b59;border-radius:9px;background:#263e30;color:#d5e4c0;font:14px/1.4 Arial,'Malgun Gothic',sans-serif;white-space:nowrap;cursor:pointer}
+.play-actions button:disabled{opacity:.38;filter:none;cursor:default}
+.play-actions kbd{display:none}
+#tools-menu{position:relative;min-width:0}
+#tools-menu>summary{list-style:none;font-size:20px;letter-spacing:1px}
+#tools-menu>summary::-webkit-details-marker{display:none}
+#tools-menu[open]>summary{border-color:#c3d99f;background:#334e36}
+.secondary-tools{position:absolute;right:0;top:calc(100% + 8px);z-index:12;display:grid;gap:4px;width:220px;max-width:calc(100vw - 40px);padding:7px;border:1px solid #7b9465;border-radius:12px;background:#1b362c;box-shadow:0 12px 30px #0005}
+.secondary-tools button{display:flex;align-items:center;gap:10px;width:100%;min-height:44px;padding:10px 12px;border:0;border-radius:7px;background:transparent;color:#e1ebd0;font-size:14px;line-height:1.5;text-align:left}
+.secondary-tools button:hover{background:#304a35}
+summary:focus-visible{outline:3px solid #f4c785;outline-offset:3px;border-radius:7px}
+.journal-details{margin-top:14px;border-top:1px solid #52704f77}
+.journal-details>summary{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:44px;padding:10px 0;list-style:none;font-size:14px;line-height:1.5;color:#c4d8b4;cursor:pointer}
+.journal-details>summary::-webkit-details-marker{display:none}
+.journal-details>summary::after{content:'＋';font-size:18px;line-height:1}
+.journal-details[open]>summary::after{content:'−'}
+.journal-details .journal-bottom{display:flex;flex-wrap:wrap;justify-content:space-between;gap:10px 20px;margin:0;padding:8px 0 0;border:0;font-size:14px;line-height:1.65;color:#bed0b4}
+.journal-details .journal-bottom b{margin-left:4px;font-size:16px;font-weight:500;color:#e1ebc8}
+.journal-details .award-guide{display:flex;flex-direction:row;align-items:center;justify-content:space-between;gap:12px;margin:12px 0 0;padding:0;border:0}
+.journal-details .award-guide>span{font-size:14px;color:#bdcfb0}
+.journal-details .award-flower{width:25px;height:25px}
+#assisted-note{margin:8px 0 0;font-size:14px;line-height:1.55;color:#eed6a6}
+#assisted-note:empty{display:none}
+.message-card{margin:16px 0 0;padding:18px;border-radius:12px}
+.message-card h3{margin:0 0 8px;font-size:22px;font-weight:500;line-height:1.4;letter-spacing:-.4px;color:#e1ebca}
+.message-card p{font-size:15px;line-height:1.65;color:#c6d6b9}
+.message-card .primary{margin-top:16px;font-size:16px;padding:12px 16px;min-height:48px}
+#result-award{margin:14px 0 10px;gap:8px}
+#result-note{font-size:14px;line-height:1.65;color:#d1dfbd}
+.primary{justify-content:center;min-height:48px;padding:12px 16px;font-size:16px;line-height:1.5;gap:12px}
+.overlay{padding:18px}
+.overlay-card{width:310px;max-width:100%;padding:24px;border-radius:14px}
+.overlay-card h3{font-size:25px;line-height:1.4;margin-bottom:12px}
+.overlay-card p{font-size:15px;line-height:1.65;margin-bottom:20px}
+.overlay-note{font-size:13px;line-height:1.5;margin-top:12px}
+.overlay-sprout{width:32px;height:32px;margin-bottom:12px}
+
+:is(#help-dialog,#practice-dialog,#gardens-dialog,#free-dialog,#share-dialog){width:calc(100% - 32px);max-width:540px;max-height:calc(100vh - 32px);max-height:calc(100dvh - 32px);overflow:auto;padding:28px;border-radius:18px}
+:is(#help-dialog,#practice-dialog,#gardens-dialog,#free-dialog,#share-dialog) h2{margin:0 36px 16px 0;font-size:25px;line-height:1.4;font-weight:500;letter-spacing:-.6px;word-break:keep-all}
+:is(#help-dialog,#practice-dialog,#gardens-dialog,#free-dialog,#share-dialog) p{font-size:15px;line-height:1.65;word-break:keep-all}
+:is(#help-dialog,#practice-dialog,#gardens-dialog,#free-dialog,#share-dialog) .help-small{font-size:13px;line-height:1.65;color:#b1c5a1;margin:16px 0 0}
+dialog ol{padding-left:22px;font-size:15px;line-height:1.8;color:#d3e0bf}
+dialog li+li{margin-top:7px}
+.close-dialog{display:grid;place-items:center;right:8px;top:8px;width:44px;height:44px;padding:0;font-size:28px;line-height:1}
+dialog button{font-size:15px;line-height:1.5;min-height:44px}
+dialog .primary{font-size:16px;min-height:48px;padding:12px 16px}
+dialog details{margin-top:16px;padding-top:8px;border-top:1px solid #6d855a66}
+dialog details>summary{min-height:44px;padding:10px 0;font-size:14px;line-height:1.5;color:#d2e0bd;cursor:pointer}
+.field-label,.size-options legend{font-size:14px;line-height:1.5;color:#d8e5c4;margin-bottom:10px}
+.field-label small{font-size:13px;color:#b2c6a3;margin-left:8px}
+.size-options{gap:8px;margin:18px 0;border:0;padding:0}
+.size-options label{flex-direction:column;flex-wrap:nowrap;gap:7px;padding:12px 6px;min-height:70px;font-size:14px}
+#free-form>.primary,#help-dialog>.primary{margin-top:14px}
+.size-options input{width:16px;height:16px}
+.size-options b{font-size:20px;font-weight:400;line-height:1.4}
+.size-options span{font-size:13px;line-height:1.5;color:#bbceac}
+.seed-entry{display:flex;flex-wrap:nowrap;gap:8px;min-width:0}
+#free-seed,#import-code,#share-code,#share-link{min-height:46px;padding:11px 12px;font:16px/1.6 Arial,'Malgun Gothic',sans-serif;border-radius:8px;color:#e4edd5}
+#import-code,#share-code{min-height:90px;max-height:190px;overflow-wrap:anywhere}
+#share-code{font:14px/1.65 ui-monospace,Consolas,monospace;margin-bottom:10px}
+#share-link{font-size:14px}
+#random-free{width:auto;min-width:44px;min-height:46px;padding:0 12px;font-size:14px}
+:is(#free-dialog,#share-dialog) .form-status{min-height:0;margin:10px 0 14px!important;font-size:14px!important;line-height:1.6}
+.form-status:empty{display:none}
+.secondary-action{min-height:46px;margin-top:10px;padding:10px 14px;font-size:15px;line-height:1.5}
+.import-section{margin-top:18px;padding-top:12px}
+.share-link-label{margin-top:18px}
+
+#gardens-dialog .collection-strip{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:18px 0;padding:16px;border-radius:12px}
+#gardens-dialog .collection-strip>div{display:flex;flex-direction:column;gap:7px;min-width:0}
+#gardens-dialog .collection-strip b{font:500 25px/1.2 Arial,'Malgun Gothic',sans-serif;color:#e0edc8;font-variant-numeric:tabular-nums}
+#gardens-dialog .collection-strip small{font:14px/1.5 Arial,'Malgun Gothic',sans-serif;margin-left:4px}
+#gardens-dialog .collection-strip span{font-size:13px;line-height:1.5;color:#c1d3b3;word-break:keep-all}
+.garden-pagination{margin:18px 0 14px;font:15px/1.5 Arial,'Malgun Gothic',sans-serif;letter-spacing:0;gap:12px}
+.garden-pagination button{width:44px;height:44px;font-size:20px}
+.garden-grid{grid-template-columns:repeat(4,minmax(0,1fr));gap:9px}
+.garden-choice{gap:9px;padding:14px 5px 12px;min-height:106px}
+.garden-choice>span{font:500 24px/1.3 Arial,'Malgun Gothic',sans-serif}
+.garden-choice small{font-size:12px;line-height:1.5;color:#c0d1af}
+.garden-choice .award-flower{width:19px;height:19px}
+.practice-board{gap:8px;padding:10px;margin-top:18px}
+.practice-progress{font-size:14px;line-height:1.5;letter-spacing:0;margin:12px 0 16px}
+.practice-tip{min-height:0;padding-left:14px}
+.practice-tip h3{font-size:18px;line-height:1.5;margin:0 0 7px}
+.practice-tip p{font-size:15px;line-height:1.65}
+.practice-actions{grid-template-columns:minmax(0,1fr) minmax(0,1.5fr);gap:10px;margin-top:20px}
+#practice-reset{min-height:48px;font-size:15px}
+
+@media(min-width:1400px){.shell{max-width:824px;padding:0 32px 32px}.heading{padding:24px 0 20px}.heading h1{font-size:28px}.game-layout{display:block}.garden-panel{padding:22px}.status-card{padding:12px 14px}.message-card{padding:18px}}
+@media(max-width:760px){.shell{max-width:760px;padding:0 20px 24px}.heading{padding:20px 0 18px}.heading h1{font-size:26px}.garden-panel{padding:18px}.board{gap:5px;padding:9px}.status-card{padding:12px;margin-bottom:12px}.mode-switch button{padding:8px 10px}.board-controls{gap:8px}.message-card h3{font-size:22px}.message-card p{font-size:15px}.journal-details .journal-bottom{font-size:14px}}
+@media(max-width:600px){.garden-toolbar{flex-direction:column;align-items:stretch;gap:10px;margin-bottom:12px}.garden-toolbar>div:first-child{justify-content:space-between}.garden-toolbar h2{font-size:21px}.mode-switch{align-self:stretch;width:100%}.mode-switch button{flex:1;min-width:0}.subtitle{font-size:14px}.status-card .move-count>span:first-child{font-size:25px}.status-card .progress-line b,.status-card .flower-progress b{font-size:16px}.status-card .flower-progress .little-flower{width:22px;height:22px}}
+@media(max-width:480px){.shell{padding:0 12px 20px}.topbar{min-height:64px;gap:8px;padding:8px 0}.brand{gap:0}.brand>span{display:none}.brand svg{width:28px;height:28px}.top-actions{gap:4px}.top-actions :is(#sound,#learn,#browse,#help){padding:0 8px;font-size:14px}.heading{padding:18px 0 16px}.heading h1{font-size:23px;letter-spacing:-.7px}.subtitle{margin-top:6px}.garden-panel{padding:12px;border-radius:14px}.garden-toolbar h2{font-size:20px}.mode-switch{gap:3px;padding:3px}.mode-switch button{font-size:14px;padding:8px 6px}.status-card{padding:10px 6px;gap:4px}.status-card .move-count{gap:4px}.status-card .move-count>span:first-child{font-size:24px}.status-card .move-count>span:last-child,.status-card .progress-line,.status-card .progress-line small,.status-card .flower-progress span{font-size:12px}.status-card .progress-line{gap:4px}.status-card .progress-line b,.status-card .flower-progress b{font-size:15px}.status-card .flower-progress{gap:4px}.status-card .flower-progress .little-flower{width:20px;height:20px}.status-card .flower-progress>div:last-child{gap:4px}.board{gap:4px;padding:7px;border-radius:10px}.tile{border-radius:6px}.board-controls{margin-top:10px;gap:6px}.play-actions{gap:4px}.play-actions>button{padding:10px 4px;font-size:14px}.journal-details{margin-top:12px}.message-card{padding:16px}.message-card h3{font-size:21px}.message-card .primary{font-size:16px}.overlay{padding:12px}.overlay-card{width:280px;padding:19px 18px}.overlay-card h3{font-size:23px}.overlay-card p{font-size:14px;margin-bottom:16px}.overlay-sprout{width:26px;height:26px;margin-bottom:8px}:is(#help-dialog,#practice-dialog,#gardens-dialog,#free-dialog,#share-dialog){padding:24px 20px 20px}:is(#help-dialog,#practice-dialog,#gardens-dialog,#free-dialog,#share-dialog) h2{font-size:23px;margin-bottom:14px}.garden-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}.garden-choice{padding:12px 4px;min-height:100px}.garden-choice>span{font-size:22px}.size-options{gap:6px}.size-options label{padding:12px 4px}.size-options b{font-size:18px}.seed-entry{flex-wrap:nowrap}#random-free{width:auto;min-width:44px;padding:0 9px}.practice-actions{grid-template-columns:minmax(0,1fr) minmax(0,1.5fr)}#gardens-dialog .collection-strip{padding:12px;gap:8px}#gardens-dialog .collection-strip b{font-size:23px}#gardens-dialog .collection-strip span{font-size:12px}}
+@media(max-width:480px){.heading{gap:8px}.hero-flower,.hero-flower svg{width:32px;height:32px}}

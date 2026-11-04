@@ -31,9 +31,16 @@
       };
       const nativeStorage = window.localStorage;
       const key = 'circuit-bloom.browser-test';
+      // Seed after navigation, so the departing game's autosave cannot overwrite it.
+      const requestedLevel = new URLSearchParams(location.search).get('level');
+      if (requestedLevel === '1' || requestedLevel === '999') {
+        nativeStorage.setItem(key + ':circuit-bloom.v1', JSON.stringify({ level: Number(requestedLevel), records: {}, sound: false }));
+        nativeStorage.removeItem(key + ':circuit-bloom.sessions.v1');
+        history.replaceState(null, '', location.pathname);
+      }
       Object.defineProperty(window, 'localStorage', { value: {
-        getItem() { return nativeStorage.getItem(key); },
-        setItem(_key, value) { nativeStorage.setItem(key, value); },
+        getItem(storageKey) { return nativeStorage.getItem(key + ':' + storageKey); },
+        setItem(storageKey, value) { nativeStorage.setItem(key + ':' + storageKey, value); },
       } });
       const updateDate = () => {
         document.querySelector('#test-date').textContent = new RealDate(now + 9 * 3600000).toISOString().replace('Z', ' KST');
@@ -48,6 +55,12 @@
       };
       updateDate();
       await import('/src/main.js');
+      const practiceClock = document.createElement('button');
+      practiceClock.id = 'practice-next-day';
+      practiceClock.textContent = '테스트: 연습 중 날짜 넘기기';
+      practiceClock.style.cssText = 'margin-top:18px;padding:8px';
+      practiceClock.addEventListener('click', nextDay);
+      document.querySelector('#practice-dialog').append(practiceClock);
       document.querySelector('#next-day').addEventListener('click', nextDay);
       document.querySelector('#timer-midnight').addEventListener('click', advanceDay);
       document.querySelector('#tile-midnight').addEventListener('click', () => {
@@ -59,12 +72,10 @@
         nextDay();
       });
       document.querySelector('#restart').addEventListener('click', () => {
-        nativeStorage.setItem(key, JSON.stringify({ level: 1, records: {}, sound: false }));
-        location.reload();
+        location.href = location.pathname + '?level=1';
       });
       document.querySelector('#level-999').addEventListener('click', () => {
-        nativeStorage.setItem(key, JSON.stringify({ level: 999, records: {}, sound: false }));
-        location.reload();
+        location.href = location.pathname + '?level=999';
       });
     </script>
   </body>
