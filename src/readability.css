@@ -1,5 +1,6 @@
 /* Keep the circuit central; secondary information lives in closed details. */
 :root{font-size:16px}
+[hidden]{display:none!important}
 body{min-width:0;font-size:16px;line-height:1.5}
 .shell{width:100%;max-width:824px;margin:0 auto;padding:0 32px 32px}
 .topbar{height:auto;min-height:72px;gap:16px;padding:12px 0}
@@ -149,3 +150,30 @@ dialog details>summary{min-height:44px;padding:10px 0;font-size:14px;line-height
 @media(max-width:600px){.garden-toolbar{flex-direction:column;align-items:stretch;gap:10px;margin-bottom:12px}.garden-toolbar>div:first-child{justify-content:space-between}.garden-toolbar h2{font-size:21px}.mode-switch{align-self:stretch;width:100%}.mode-switch button{flex:1;min-width:0}.subtitle{font-size:14px}.status-card .move-count>span:first-child{font-size:25px}.status-card .progress-line b,.status-card .flower-progress b{font-size:16px}.status-card .flower-progress .little-flower{width:22px;height:22px}}
 @media(max-width:480px){.shell{padding:0 12px 20px}.topbar{min-height:64px;gap:8px;padding:8px 0}.brand{gap:0}.brand>span{display:none}.brand svg{width:28px;height:28px}.top-actions{gap:4px}.top-actions :is(#sound,#learn,#browse,#help){padding:0 8px;font-size:14px}.heading{padding:18px 0 16px}.heading h1{font-size:23px;letter-spacing:-.7px}.subtitle{margin-top:6px}.garden-panel{padding:12px;border-radius:14px}.garden-toolbar h2{font-size:20px}.mode-switch{gap:3px;padding:3px}.mode-switch button{font-size:14px;padding:8px 6px}.status-card{padding:10px 6px;gap:4px}.status-card .move-count{gap:4px}.status-card .move-count>span:first-child{font-size:24px}.status-card .move-count>span:last-child,.status-card .progress-line,.status-card .progress-line small,.status-card .flower-progress span{font-size:12px}.status-card .progress-line{gap:4px}.status-card .progress-line b,.status-card .flower-progress b{font-size:15px}.status-card .flower-progress{gap:4px}.status-card .flower-progress .little-flower{width:20px;height:20px}.status-card .flower-progress>div:last-child{gap:4px}.board{gap:4px;padding:7px;border-radius:10px}.tile{border-radius:6px}.board-controls{margin-top:10px;gap:6px}.play-actions{gap:4px}.play-actions>button{padding:10px 4px;font-size:14px}.journal-details{margin-top:12px}.message-card{padding:16px}.message-card h3{font-size:21px}.message-card .primary{font-size:16px}.overlay{padding:12px}.overlay-card{width:280px;padding:19px 18px}.overlay-card h3{font-size:23px}.overlay-card p{font-size:14px;margin-bottom:16px}.overlay-sprout{width:26px;height:26px;margin-bottom:8px}:is(#help-dialog,#practice-dialog,#gardens-dialog,#free-dialog,#share-dialog){padding:24px 20px 20px}:is(#help-dialog,#practice-dialog,#gardens-dialog,#free-dialog,#share-dialog) h2{font-size:23px;margin-bottom:14px}.garden-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}.garden-choice{padding:12px 4px;min-height:100px}.garden-choice>span{font-size:22px}.size-options{gap:6px}.size-options label{padding:12px 4px}.size-options b{font-size:18px}.seed-entry{flex-wrap:nowrap}#random-free{width:auto;min-width:44px;padding:0 9px}.practice-actions{grid-template-columns:minmax(0,1fr) minmax(0,1.5fr)}#gardens-dialog .collection-strip{padding:12px;gap:8px}#gardens-dialog .collection-strip b{font-size:23px}#gardens-dialog .collection-strip span{font-size:12px}}
 @media(max-width:480px){.heading{gap:8px}.hero-flower,.hero-flower svg{width:32px;height:32px}}
+
+/* 보관함은 정원 창 안에서만 펼쳐 메인 화면의 문구량을 유지합니다. */
+.free-banner{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.free-banner strong{min-width:0;flex:1}
+#favorite-current{display:grid;place-items:center;flex-shrink:0;width:44px;height:44px;padding:0;border:1px solid #82915f;border-radius:9px;background:#223b2b;color:#e6ce9c;font-size:25px;line-height:1}
+#favorite-current[aria-pressed=true]{background:#475333;border-color:#dfcc91}
+.catalog-tabs,.library-filter-tabs{display:flex;gap:6px;margin:14px 0}
+.catalog-tabs button,.library-filter-tabs button{min-height:44px;padding:9px 14px;border:1px solid #647e58;border-radius:8px;background:#223b2d;color:#d5e4c3;font-size:14px}
+.catalog-tabs button{flex:1}
+.catalog-tabs button[aria-pressed=true],.library-filter-tabs button[aria-pressed=true]{background:#d7edb1;color:#29422e;border-color:#d7edb1}
+.library-filters{display:grid;grid-template-columns:minmax(0,1fr) 120px;gap:8px;margin-top:17px}
+#library-query,#library-size{min-width:0;width:100%;min-height:44px;border:1px solid #768d61;border-radius:8px;background:#142e25;color:#e0ebce;font:15px/1.5 Arial,'Malgun Gothic',sans-serif;padding:9px 10px}
+#library-query::placeholder{color:#acbea1}
+#library-size option{background:#183327;color:#e0ebce}
+.library-list{display:grid;gap:8px;list-style:none;padding:0;margin:14px 0}
+.seed-card{display:grid;grid-template-columns:minmax(0,1fr) 44px 44px;gap:4px;align-items:center;border:1px solid #5c7651;border-radius:10px;padding:7px;background:#263e30}
+.seed-open{display:flex;flex-direction:column;gap:5px;align-items:flex-start;text-align:left;min-width:0;min-height:54px;padding:5px 8px;border:0;border-radius:6px;background:transparent;color:#e0eacc}
+.seed-open strong{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;font-size:16px;line-height:1.45;font-weight:500;overflow-wrap:anywhere}
+.seed-open span{font-size:13px;line-height:1.5;color:#bdceb0}
+.seed-card .seed-favorite,.seed-card .seed-remove{display:grid;place-items:center;width:44px;height:44px;padding:0;border:0;border-radius:7px;background:transparent;color:#e8ce9c;font-size:25px;line-height:1}
+.seed-card .seed-remove{color:#b8c9ac;font-size:26px}
+.seed-card .seed-favorite[aria-pressed=true]{background:#4a5133}
+.seed-card button:hover{background-color:#3a5138}
+.library-empty{padding:25px 0;color:#c2d2b7;text-align:center}
+#gardens-dialog #library-status{font-size:14px;line-height:1.6;color:#ead29e;margin:10px 0}
+.library-pagination{margin-bottom:0}
+@media(max-width:480px){.library-filters{grid-template-columns:minmax(0,1fr) 105px;gap:6px}.catalog-tabs button{padding:8px}.seed-card{grid-template-columns:minmax(0,1fr) 44px 44px;padding:5px;gap:2px}.seed-open{padding:4px}.seed-open strong{font-size:15px}.seed-open span{font-size:12px}}

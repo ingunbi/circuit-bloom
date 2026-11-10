@@ -22,7 +22,7 @@
     <div id="app"></div>
     <script type="module">
       import { millisecondsUntilNextKstDay } from '/src/daily.js';
-      // Only this development fixture overrides time. Production imports index.html.
+      // 이 개발용 페이지에서만 시계를 바꿉니다. 배포본은 index.html을 사용합니다.
       const RealDate = window.Date;
       let now = RealDate.parse('2026-11-03T14:59:59Z');
       window.Date = class extends RealDate {
@@ -31,11 +31,12 @@
       };
       const nativeStorage = window.localStorage;
       const key = 'circuit-bloom.browser-test';
-      // Seed after navigation, so the departing game's autosave cannot overwrite it.
+      // 이전 화면의 자동 저장이 테스트 값을 덮어쓰지 않도록 이동 후 초기화합니다.
       const requestedLevel = new URLSearchParams(location.search).get('level');
       if (requestedLevel === '1' || requestedLevel === '999') {
         nativeStorage.setItem(key + ':circuit-bloom.v1', JSON.stringify({ level: Number(requestedLevel), records: {}, sound: false }));
         nativeStorage.removeItem(key + ':circuit-bloom.sessions.v1');
+        nativeStorage.removeItem(key + ':circuit-bloom.library.v1');
         history.replaceState(null, '', location.pathname);
       }
       Object.defineProperty(window, 'localStorage', { value: {
@@ -61,6 +62,14 @@
       practiceClock.style.cssText = 'margin-top:18px;padding:8px';
       practiceClock.addEventListener('click', nextDay);
       document.querySelector('#practice-dialog').append(practiceClock);
+      const libraryClock = document.createElement('button');
+      libraryClock.id = 'library-next-day';
+      libraryClock.textContent = '테스트: 보관함에서 날짜 넘기기';
+      libraryClock.addEventListener('click', () => {
+        document.querySelector('#library-query').focus();
+        nextDay();
+      });
+      document.querySelector('#library-catalog').append(libraryClock);
       document.querySelector('#next-day').addEventListener('click', nextDay);
       document.querySelector('#timer-midnight').addEventListener('click', advanceDay);
       document.querySelector('#tile-midnight').addEventListener('click', () => {

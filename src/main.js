@@ -7,9 +7,11 @@ import { watchKstDay } from './daily.js';
 import { normalizeSave, recordWin, completionStars, gardenStats } from './save.js';
 import { createSession, restoreSession, sessionMasks, applyTurn, undoTurn, redoTurn, toggleLock } from './session.js';
 import { normalizeChallenge, puzzleKey, encodeChallenge, decodeChallenge, freeRecordKey, challengeFromPuzzle } from './challenge.js';
+import { normalizeLibrary, recordVisit, toggleFavorite, removeEntry, listLibrary } from './library.js';
 
 const STORAGE_KEY = 'circuit-bloom.v1';
 const SESSION_KEY = 'circuit-bloom.sessions.v1';
+const LIBRARY_KEY = 'circuit-bloom.library.v1';
 let storageWorking = true;
 function readJSON(key) {
   let raw;
@@ -20,6 +22,20 @@ function readJSON(key) {
 const save = normalizeSave(readJSON(STORAGE_KEY));
 const stored = readJSON(SESSION_KEY);
 const sessions = stored && typeof stored === 'object' && !Array.isArray(stored) ? stored : {};
+const storedLibrary = readJSON(LIBRARY_KEY);
+const library = normalizeLibrary(storedLibrary);
+const migrateLibrary = !storedLibrary || !Array.isArray(storedLibrary.entries);
+if (migrateLibrary) {
+  // 방문 시각을 알 수 없는 이전 기록은 시각 0으로 옮깁니다.
+  for (const key of Object.keys(save.completions)) {
+    if (key.startsWith('free:')) {
+      const challenge = decodeChallenge(key.slice(5));
+      if (challenge) recordVisit(library, challenge, 0);
+    }
+  }
+  const previousFree = normalizeChallenge(sessions.freeChallenge);
+  if (previousFree) recordVisit(library, previousFree, 0);
+}
 function writeJSON(key, value) {
   try { localStorage.setItem(key, JSON.stringify(value)); }
   catch { storageWorking = false; }
@@ -41,12 +57,12 @@ $('#app').innerHTML = `
     <section class="game-layout" aria-label="회로 정원 게임">
       <div class="garden-panel">
         <div class="garden-toolbar"><div class="garden-identity"><h2 id="garden-title">정원 01</h2><span id="grid-label">4 × 4</span><span id="garden-category" hidden></span><span id="chapter-label" hidden></span></div><div class="mode-switch" aria-label="게임 모드"><button id="campaign-mode" aria-pressed="true" class="selected">캠페인</button><button id="daily-mode" aria-pressed="false">오늘</button><button id="free-mode" aria-pressed="false">자유</button></div></div>
-        <div id="free-banner" class="free-banner hidden"><strong id="free-seed-label"></strong></div>
+        <div id="free-banner" class="free-banner hidden"><strong id="free-seed-label"></strong><button id="favorite-current" aria-label="즐겨찾기 추가" aria-pressed="false" title="즐겨찾기 추가">☆</button></div>
         <section class="status-card" aria-label="게임 진행"><div class="move-count"><span id="moves">00</span><span>회전</span></div><div class="progress-line"><span>연결</span><b><span id="powered">1</span><small id="total"> / 16</small></b></div><div class="flower-progress"><div class="little-flower">${flower}</div><div><b id="flower-count">0 / 0</b><span>꽃</span></div></div><div class="meter" aria-hidden="true"><div id="meter-fill"></div></div></section>
         <div class="board-wrap"><div id="board" class="board" role="group" aria-label="회로 타일" aria-describedby="control-note"></div><div id="overlay" class="overlay hidden"></div></div>
         <div class="board-controls"><div class="rotation-picker" role="group" aria-label="타일 회전 방향"><button id="rotate-left" aria-label="왼쪽 회전" aria-pressed="false" title="왼쪽으로 · Q">↺</button><button id="rotate-right" aria-label="오른쪽 회전" aria-pressed="true" title="오른쪽으로 · E">↻</button></div><button id="lock-mode" aria-label="조각 고정 모드" aria-pressed="false" title="고정 · F">${lockIcon}<b id="locked-count" hidden>0</b></button><button id="pause" aria-label="게임 일시정지" title="일시정지 · P">Ⅱ</button></div>
         <p id="control-note" hidden>탭하면 오른쪽으로 회전합니다.</p>
-        <div class="play-actions"><button id="undo" title="되돌리기 · Z" aria-label="되돌리기">↶ <span>되돌림</span></button><button id="redo" title="다시 하기 · Y" aria-label="다시 하기">↷ <span>다시</span></button><button id="hint">✧ <span>도움</span></button><details id="tools-menu"><summary aria-label="추가 도구" title="추가 도구">•••</summary><div class="secondary-tools"><button id="reset">처음부터</button><button id="share-puzzle">퍼즐 공유</button><button id="create-free">새 정원</button></div></details></div>
+        <div class="play-actions"><button id="undo" title="되돌리기 · Z" aria-label="되돌리기">↶ <span>되돌림</span></button><button id="redo" title="다시 하기 · Y" aria-label="다시 하기">↷ <span>다시</span></button><button id="hint">✧ <span>도움</span></button><details id="tools-menu"><summary aria-label="추가 도구" title="추가 도구">•••</summary><div class="secondary-tools"><button id="reset">처음부터</button><button id="share-puzzle">퍼즐 공유</button><button id="create-free">새 정원</button><button id="open-library">씨앗 보관함</button></div></details></div>
         <p id="assisted-note" hidden>도움 사용 · 최고 기록 제외</p>
         <section id="message-card" class="message-card hidden" aria-live="polite"><h3 id="message-title"></h3><p id="message-text"></p><div id="win-actions" class="hidden"><div id="result-award" class="award-flowers"></div><p id="result-note"></p><button id="next" class="primary">다음 정원 <span>↗</span></button></div></section>
         <details class="journal-details"><summary>이 정원 기록</summary><div class="journal-bottom"><span>기준 <b id="par">—</b>회</span><span>최고 <b id="best">—</b></span></div><div class="award-guide"><div id="best-award" class="award-flowers" aria-label="아직 모은 꽃 없음">${awards(0)}</div><span>모은 꽃</span></div></details>
@@ -56,7 +72,7 @@ $('#app').innerHTML = `
   </main>
   <dialog id="help-dialog"><button data-close="help-dialog" class="close-dialog" aria-label="도움말 닫기">×</button><h2>게임 방법</h2><ol><li>조각을 눌러 90° 돌리세요.</li><li>마주 보는 선이 이어지면 빛이 흘러요.</li><li>모든 조각에 빛을 연결하면 완성!</li></ol><details class="info-details"><summary>키보드와 고정</summary><p>방향키 이동 · Enter / Space 회전<br>Q 왼쪽 · E 오른쪽 · F 고정 / 해제<br>Z 되돌리기 · Y 다시 하기<br>P / Esc 일시정지 · M 소리</p><p>우클릭이나 Shift+클릭은 반대로 돌립니다. 고정한 조각은 회전과 도움으로 바뀌지 않으며, 고정도 되돌릴 수 있어요.</p></details><details class="info-details"><summary>꽃과 최고 기록</summary><p>도움 없이 기준 이내는 꽃 3송이, 1.5배 이내는 2송이, 그 밖의 완성은 1송이입니다. 기준은 준비된 정답까지의 양방향 회전 수이며, 최적해를 뜻하지는 않아요.</p><p>도움을 쓴 시도는 최고 기록에 남지 않습니다. 도움을 되돌려도 이 조건은 유지돼요.</p></details><details class="info-details"><summary>저장과 일일 퍼즐</summary><p>회로와 고정·되돌리기 이력을 이 브라우저에 저장합니다. 일일 퍼즐은 한국 시간 자정에 바뀝니다.</p><p>공유받은 퍼즐은 자유 정원으로 열립니다. 캠페인 진도와 일일 연속 기록에 영향을 주지 않아요.</p></details><button id="help-done" data-close="help-dialog" class="primary">돌아가기</button></dialog>
   <dialog id="practice-dialog"><button data-close="practice-dialog" class="close-dialog" aria-label="연습 닫기">×</button><h2>빛 연결 연습</h2><p class="practice-intro">두 조각을 돌려 꽃에 빛을 연결하세요.</p><div id="practice-board" class="practice-board" role="group" aria-label="세 조각 연결 연습"><button class="tile source" disabled aria-label="연습 전원 시작점"></button><button class="tile" aria-label="연습 가운데 회로 회전"></button><button class="tile" aria-label="연습 꽃 회로 회전"></button></div><div id="practice-progress" class="practice-progress"></div><div class="practice-tip" aria-live="polite"><h3 id="practice-title"></h3><p id="practice-text"></p></div><div class="practice-actions"><button id="practice-reset">다시</button><button id="practice-done" data-close="practice-dialog" class="primary">게임으로</button></div></dialog>
-  <dialog id="gardens-dialog"><button data-close="gardens-dialog" class="close-dialog" aria-label="정원 목록 닫기">×</button><h2>나의 정원</h2><section class="collection-strip" aria-label="나의 정원 기록"><div><b id="stat-completed">0</b><span>완성</span></div><div><b id="stat-flowers">0</b><span>모은 꽃</span></div><div><b id="stat-streak">0<small>일</small></b><span>일일 연속</span></div></section><div class="garden-pagination"><button id="previous-page" aria-label="이전 정원 페이지">←</button><span id="garden-page-label"></span><button id="next-page" aria-label="다음 정원 페이지">→</button></div><div id="garden-grid" class="garden-grid"></div><p class="help-small">고른 정원에서 이어하기가 시작됩니다.</p></dialog>
+  <dialog id="gardens-dialog"><button data-close="gardens-dialog" class="close-dialog" aria-label="정원 목록 닫기">×</button><h2>나의 정원</h2><div class="catalog-tabs" role="group" aria-label="정원 종류"><button id="catalog-campaign" aria-pressed="true">캠페인</button><button id="catalog-library" aria-pressed="false">씨앗 보관함</button></div><section id="collection-stats" class="collection-strip" aria-label="나의 정원 기록"><div><b id="stat-completed">0</b><span>완성</span></div><div><b id="stat-flowers">0</b><span>모은 꽃</span></div><div><b id="stat-streak">0<small>일</small></b><span>일일 연속</span></div></section><div id="campaign-catalog"><div class="garden-pagination"><button id="previous-page" aria-label="이전 정원 페이지">←</button><span id="garden-page-label"></span><button id="next-page" aria-label="다음 정원 페이지">→</button></div><div id="garden-grid" class="garden-grid"></div><p class="help-small">고른 정원에서 이어하기가 시작됩니다.</p></div><section id="library-catalog" hidden aria-label="씨앗 보관함"><div class="library-filters"><label class="sr-only" for="library-query">씨앗 이름 검색</label><input id="library-query" type="search" placeholder="씨앗 이름 검색" autocomplete="off"><label class="sr-only" for="library-size">씨앗 크기</label><select id="library-size"><option value="">모든 크기</option><option value="4">4 × 4</option><option value="5">5 × 5</option><option value="6">6 × 6</option></select></div><div class="library-filter-tabs" role="group" aria-label="보관함 필터"><button id="library-all" aria-pressed="true">전체</button><button id="library-favorites" aria-pressed="false">즐겨찾기</button></div><p id="library-status" class="form-status" role="status"></p><ul id="library-list" class="library-list"></ul><p id="library-empty" class="library-empty" hidden></p><div class="garden-pagination library-pagination"><button id="library-previous" aria-label="이전 씨앗 페이지">←</button><span id="library-page-label"></span><button id="library-next" aria-label="다음 씨앗 페이지">→</button></div><details class="info-details"><summary>보관 안내</summary><p>최근 씨앗 40개와 즐겨찾기 20개를 보관합니다. 목록에서 지워도 진행과 완료 기록은 남으며, 다시 열면 최근 씨앗에 표시됩니다.</p></details></section></dialog>
   <dialog id="free-dialog"><button data-close="free-dialog" class="close-dialog" aria-label="자유 정원 만들기 닫기">×</button><h2>새 자유 정원</h2><p>같은 이름과 크기면 같은 퍼즐이 열려요.</p><form id="free-form"><fieldset class="size-options"><legend>크기</legend><label><input type="radio" name="free-size" value="4"><b>4 × 4</b></label><label><input type="radio" name="free-size" value="5" checked><b>5 × 5</b></label><label><input type="radio" name="free-size" value="6"><b>6 × 6</b></label></fieldset><label class="field-label" for="free-seed">씨앗 이름 <small>최대 40자</small></label><div class="seed-entry"><input id="free-seed" maxlength="80" autocomplete="off" placeholder="예: 반딧불 정원" required><button id="random-free" type="button">무작위</button></div><p id="free-error" class="form-status" role="status"></p><button type="submit" class="primary">만들기</button></form><details id="import-options" class="import-section"><summary>코드로 열기</summary><label class="field-label" for="import-code">퍼즐 코드 또는 링크</label><textarea id="import-code" rows="2" maxlength="2048" placeholder="받은 코드를 붙여 넣으세요."></textarea><button id="import-free" class="secondary-action">열기</button></details><p class="help-small">새로 만들면 이전 자유 정원의 이어하기가 바뀝니다.</p></dialog>
   <dialog id="share-dialog"><button data-close="share-dialog" class="close-dialog" aria-label="퍼즐 공유 닫기">×</button><h2>퍼즐 공유</h2><p id="share-name"></p><p>회전 전의 같은 회로를 공유해요.</p><label class="field-label" for="share-code">퍼즐 코드</label><textarea id="share-code" rows="3" readonly></textarea><button id="copy-code" class="primary">코드 복사</button><details id="link-options" class="info-details"><summary>링크로 공유</summary><label class="field-label" for="share-link">공유 링크</label><input id="share-link" readonly><button id="copy-link" class="secondary-action">링크 복사</button><p class="help-small">로컬 주소가 열리지 않으면 퍼즐 코드를 보내 주세요.</p></details><p id="share-status" class="form-status" role="status"></p></dialog>
   <div id="announcer" class="sr-only" aria-live="polite" aria-atomic="true"></div>
@@ -101,6 +117,7 @@ let level = campaignResumeLevel(), state = 'title';
 let puzzle, session, masks, targetTurns, currentChallenge, tiles = [], focusIndex = 0, previousBloomed = 0;
 let rotationDirection = 1, lockMode = false;
 let dialogReturnState = 'playing', gardenPage = 0;
+let libraryFilter = 'all', libraryPage = 0;
 const dialogIds = ['#help-dialog', '#gardens-dialog', '#practice-dialog', '#free-dialog', '#share-dialog'];
 function dialogOpen() { return dialogIds.some(id => $(id).open); }
 function focusBoard() { (tiles[focusIndex] ?? tiles[0])?.focus({ preventScroll: true }); }
@@ -112,6 +129,16 @@ function persistSession() {
   writeJSON(SESSION_KEY, sessions);
 }
 function clearSession() { delete sessions[mode]; writeJSON(SESSION_KEY, sessions); }
+function persistLibrary() { writeJSON(LIBRARY_KEY, library); updateFavoriteButton(); }
+function updateFavoriteButton() {
+  const button = $('#favorite-current');
+  const code = mode === 'free' && currentChallenge ? encodeChallenge(currentChallenge) : null;
+  const favorite = Boolean(code && library.entries.find(entry => entry.code === code)?.favorite);
+  button.textContent = favorite ? '★' : '☆';
+  button.setAttribute('aria-pressed', String(favorite));
+  button.setAttribute('aria-label', favorite ? '즐겨찾기 해제' : '즐겨찾기 추가');
+  button.title = favorite ? '즐겨찾기 해제' : '즐겨찾기 추가';
+}
 function setMessage(title, text, visible = false) {
   $('#message-title').textContent = title; $('#message-text').textContent = text;
   $('#message-card').classList.toggle('hidden', !visible);
@@ -129,6 +156,7 @@ function updateControls() {
   $('#locked-count').textContent = session?.locked.filter(Boolean).length ?? 0;
   $('#locked-count').hidden = !session?.locked.some(Boolean);
   $('#assisted-note').hidden = !session?.usedHint;
+  updateFavoriteButton();
   $('#control-note').textContent = lockMode ? '고정할 조각을 탭하세요. 다시 탭하면 풀려요.' : `탭하면 ${rotationDirection === 1 ? '오른쪽' : '왼쪽'}으로 · 우클릭 / Shift+클릭은 반대로 · F 고정`;
   tiles.forEach((tile, i) => tile.setAttribute('aria-disabled', String(i === puzzle.source || (session.locked[i] && !lockMode))));
   const pauseLabel = state === 'paused' ? '계속하기' : state === 'won' ? '정원 완성' : state === 'title' ? '시작하기' : '일시정지';
@@ -203,6 +231,7 @@ function newPuzzle(showTitle = false, moveFocus = true, restore = true) {
   setMessage('', '');
   $('#pause').textContent = '일시정지 Ⅱ';
   update(); persistSession(); renderStats();
+  if (mode === 'free') { recordVisit(library, currentChallenge); persistLibrary(); }
   if (showTitle) overlay('title');
   else if (moveFocus) focusBoard();
 }
@@ -325,14 +354,103 @@ function openFreeDialog() {
   $('#import-options').open = false;
   openDialog('#free-dialog');
 }
-function openFreeChallenge(challenge) {
+function openFreeChallenge(challenge, restore = false) {
   const normalized = normalizeChallenge(challenge);
   if (!normalized) return;
   persistSession();
   freeChallenge = normalized; mode = 'free';
   for (const id of dialogIds) if ($(id).open) $(id).close();
-  newPuzzle(false, true, false);
+  newPuzzle(false, true, restore);
 }
+function showGardenTab(tab) {
+  const isLibrary = tab === 'library';
+  $('#catalog-campaign').setAttribute('aria-pressed', String(!isLibrary));
+  $('#catalog-library').setAttribute('aria-pressed', String(isLibrary));
+  $('#collection-stats').hidden = isLibrary;
+  $('#campaign-catalog').hidden = isLibrary;
+  $('#library-catalog').hidden = !isLibrary;
+  if (isLibrary) renderLibrary(); else renderGardens();
+}
+function openLibrary() {
+  if (dialogOpen()) return;
+  libraryFilter = 'all'; libraryPage = 0;
+  $('#library-query').value = ''; $('#library-size').value = ''; $('#library-status').textContent = '';
+  showGardenTab('library'); openDialog('#gardens-dialog');
+}
+function renderLibrary() {
+  const entries = listLibrary(library, {
+    filter: libraryFilter, query: $('#library-query').value,
+    size: $('#library-size').value ? Number($('#library-size').value) : null,
+  });
+  const pageCount = Math.ceil(entries.length / 6);
+  libraryPage = Math.max(0, Math.min(libraryPage, pageCount - 1));
+  $('#library-all').setAttribute('aria-pressed', String(libraryFilter === 'all'));
+  $('#library-favorites').setAttribute('aria-pressed', String(libraryFilter === 'favorites'));
+  $('#library-previous').disabled = libraryPage === 0;
+  $('#library-next').disabled = libraryPage + 1 >= pageCount;
+  $('#library-page-label').textContent = `${pageCount ? libraryPage + 1 : 0} / ${pageCount}`;
+  document.querySelector('.library-pagination').hidden = entries.length <= 6;
+  $('#library-empty').hidden = entries.length > 0;
+  $('#library-empty').textContent = !library.entries.length ? '자유 정원을 열면 여기에 보관돼요.' : libraryFilter === 'favorites' && !$('#library-query').value && !$('#library-size').value ? '즐겨찾기한 씨앗이 없어요.' : '맞는 씨앗이 없어요.';
+  $('#library-list').replaceChildren();
+  for (const entry of entries.slice(libraryPage * 6, libraryPage * 6 + 6)) {
+    const row = document.createElement('li'); row.className = 'seed-card';
+    const play = document.createElement('button'); play.className = 'seed-open';
+    play.dataset.libraryAction = 'open'; play.dataset.code = entry.code;
+    const name = document.createElement('strong'); name.textContent = entry.label;
+    const continuing = sessions.free?.seed === freeRecordKey(entry.challenge);
+    const stars = save.completions[freeRecordKey(entry.challenge)]?.stars;
+    const meta = document.createElement('span');
+    meta.textContent = `${entry.challenge.size} × ${entry.challenge.size} · ${continuing ? '이어하기' : stars ? `꽃 ${stars}송이 · 다시 풀기` : '새로 풀기'}`;
+    play.title = entry.label; play.setAttribute('aria-label', `${entry.label}, ${entry.challenge.size} 곱하기 ${entry.challenge.size} 정원 ${continuing ? '이어하기' : '새로 풀기'}`);
+    play.append(name, meta);
+    const favorite = document.createElement('button'); favorite.className = 'seed-favorite';
+    favorite.dataset.libraryAction = 'favorite'; favorite.dataset.code = entry.code;
+    favorite.textContent = entry.favorite ? '★' : '☆'; favorite.setAttribute('aria-pressed', String(entry.favorite));
+    favorite.setAttribute('aria-label', `${entry.label} 즐겨찾기 ${entry.favorite ? '해제' : '추가'}`);
+    favorite.title = entry.favorite ? '즐겨찾기 해제' : '즐겨찾기 추가';
+    const remove = document.createElement('button'); remove.className = 'seed-remove';
+    remove.dataset.libraryAction = 'remove'; remove.dataset.code = entry.code; remove.textContent = '×';
+    remove.setAttribute('aria-label', `${entry.label} 보관함에서 제거`); remove.title = '목록에서만 제거';
+    row.append(play, favorite, remove); $('#library-list').append(row);
+  }
+}
+$('#favorite-current').addEventListener('click', () => {
+  if (mode !== 'free') return;
+  if (!toggleFavorite(library, currentChallenge)) {
+    setMessage('즐겨찾기는 20개까지 보관해요.', '보관함에서 하나를 해제한 뒤 다시 추가하세요.', true); return;
+  }
+  persistLibrary();
+  $('#announcer').textContent = $('#favorite-current').getAttribute('aria-pressed') === 'true' ? '즐겨찾기에 추가했어요.' : '즐겨찾기를 해제했어요.';
+});
+$('#open-library').addEventListener('click', openLibrary);
+$('#catalog-campaign').addEventListener('click', () => showGardenTab('campaign'));
+$('#catalog-library').addEventListener('click', () => { $('#library-status').textContent = ''; showGardenTab('library'); });
+for (const id of ['#library-query', '#library-size']) $(id).addEventListener(id === '#library-query' ? 'input' : 'change', () => { libraryPage = 0; renderLibrary(); });
+$('#library-all').addEventListener('click', () => { libraryFilter = 'all'; libraryPage = 0; renderLibrary(); });
+$('#library-favorites').addEventListener('click', () => { libraryFilter = 'favorites'; libraryPage = 0; renderLibrary(); });
+$('#library-previous').addEventListener('click', () => { libraryPage--; renderLibrary(); });
+$('#library-next').addEventListener('click', () => { libraryPage++; renderLibrary(); });
+$('#library-list').addEventListener('click', event => {
+  const button = event.target.closest('button[data-library-action]'); if (!button) return;
+  const code = button.dataset.code, action = button.dataset.libraryAction;
+  if (action === 'open') {
+    const challenge = decodeChallenge(code);
+    if (challenge) openFreeChallenge(challenge, sessions.free?.seed === freeRecordKey(challenge));
+    return;
+  }
+  const focused = document.activeElement === button;
+  if (action === 'favorite' && !toggleFavorite(library, code)) {
+    $('#library-status').textContent = '즐겨찾기는 최대 20개입니다.'; return;
+  }
+  if (action === 'remove') removeEntry(library, code);
+  persistLibrary(); renderLibrary();
+  $('#library-status').textContent = action === 'remove' ? '목록에서만 제거했어요.' : '';
+  if (focused) {
+    const replacement = [...$('#library-list').querySelectorAll('button')].find(item => item.dataset.code === code && item.dataset.libraryAction === action);
+    (replacement ?? $('#library-query')).focus({ preventScroll: true });
+  }
+});
 function parseSharedInput(value) {
   const text = value.trim();
   const direct = decodeChallenge(text);
@@ -395,7 +513,7 @@ function renderGardens() {
     return `<button class="garden-choice${mode === 'campaign' && level === n ? ' current' : ''}" data-level="${n}" ${locked ? 'disabled' : ''} aria-label="정원 ${n}${locked ? ', 아직 열리지 않음' : `, 모은 꽃 ${stars}송이`}"><span>${String(n).padStart(2, '0')}</span><div class="award-flowers">${awards(stars)}</div><small>${locked ? '잠김' : n === save.level ? '다음' : '다시'}</small></button>`;
   }).join('');
 }
-$('#browse').addEventListener('click', () => { gardenPage = Math.floor(((mode === 'campaign' ? level : save.level) - 1) / 12); renderGardens(); openDialog('#gardens-dialog'); });
+$('#browse').addEventListener('click', () => { gardenPage = Math.floor(((mode === 'campaign' ? level : save.level) - 1) / 12); showGardenTab('campaign'); openDialog('#gardens-dialog'); });
 $('#previous-page').addEventListener('click', () => { gardenPage--; renderGardens(); });
 $('#next-page').addEventListener('click', () => { gardenPage++; renderGardens(); });
 $('#garden-grid').addEventListener('click', event => {
@@ -465,6 +583,7 @@ document.addEventListener('click', event => {
   if (tools.open && !tools.contains(event.target)) tools.open = false;
 });
 setSound(); newPuzzle(true);
+if (migrateLibrary) persistLibrary();
 if (launchShare.present && !launchShare.challenge) showShareError();
 const dailyClock = watchKstDay(() => {
   if (sessions.daily?.seed !== `daily:${kstDate()}`) { delete sessions.daily; writeJSON(SESSION_KEY, sessions); }
