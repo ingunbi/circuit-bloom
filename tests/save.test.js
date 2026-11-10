@@ -7,7 +7,7 @@ const campaignWin = (overrides = {}) => ({
   seed: 'garden:999', moves: 42, par: 42, usedHint: false, mode: 'campaign', level: 999, ...overrides,
 });
 
-test('save normalization preserves valid progress beyond level 999', () => {
+test("저장값을 정리해도 999단계를 넘는 유효한 진도는 유지된다", () => {
   const stored = { level: 1000, records: { 'garden:999': 42 }, sound: true };
   const save = normalizeSave(stored);
   assert.deepEqual(save, { ...stored, completions: { 'garden:999': { stars: 1, assisted: false } } });
@@ -16,7 +16,7 @@ test('save normalization preserves valid progress beyond level 999', () => {
   assert.equal(normalizeSave({ level: Number.MAX_SAFE_INTEGER }).level, Number.MAX_SAFE_INTEGER);
 });
 
-test('save normalization rejects invalid levels, records, and truthy sound values', () => {
+test("저장값을 정리할 때 잘못된 단계와 기록 및 참으로 간주될 뿐인 소리 설정을 거부한다", () => {
   for (const level of [undefined, null, 0, -1, 1.5, '7', NaN, Infinity, Number.MAX_SAFE_INTEGER + 1]) {
     assert.equal(normalizeSave({ level }).level, 1);
   }
@@ -28,7 +28,7 @@ test('save normalization rejects invalid levels, records, and truthy sound value
   }
 });
 
-test('campaign wins advance level 999 to 1000 and preserve farther progress', () => {
+test("캠페인 완성 후 999단계에서 1000단계로 진행하며 더 앞선 진도는 유지한다", () => {
   const save = normalizeSave({ level: 999 });
   assert.equal(recordWin(save, campaignWin()), true);
   assert.equal(save.level, 1000);
@@ -39,7 +39,7 @@ test('campaign wins advance level 999 to 1000 and preserve farther progress', ()
   assert.equal(save.level, 1005);
 });
 
-test('campaign progress remains a safe integer at the numeric limit', () => {
+test("캠페인 진도는 숫자 한계에서도 안전한 정수로 유지된다", () => {
   const limit = Number.MAX_SAFE_INTEGER;
   const save = normalizeSave({ level: limit - 1 });
   recordWin(save, campaignWin({ level: limit - 1, seed: `garden:${limit - 1}` }));
@@ -49,7 +49,7 @@ test('campaign progress remains a safe integer at the numeric limit', () => {
   assert.equal(Number.isSafeInteger(save.level), true);
 });
 
-test('only strictly better unassisted wins update the best move record', () => {
+test("도움 없이 완성한 더 좋은 회전 수만 최고 기록을 갱신한다", () => {
   const save = normalizeSave({ level: 999, records: { 'garden:999': 42 } });
   assert.equal(recordWin(save, campaignWin({ moves: 43 })), false);
   assert.equal(recordWin(save, campaignWin({ moves: 42 })), false);
@@ -62,7 +62,7 @@ test('only strictly better unassisted wins update the best move record', () => {
   assert.equal(save.records['garden:999'], 42);
 });
 
-test('assisted wins advance campaign progress without creating or improving records', () => {
+test("도움을 써서 완성해도 캠페인 진도는 나아가지만 최고 기록은 만들거나 갱신하지 않는다", () => {
   const save = normalizeSave({ level: 999 });
   assert.equal(recordWin(save, campaignWin({ usedHint: true })), false);
   assert.equal(save.level, 1000);
@@ -73,7 +73,7 @@ test('assisted wins advance campaign progress without creating or improving reco
   assert.equal(save.records['garden:999'], 42);
 });
 
-test('daily wins store their own records without advancing campaign progress', () => {
+test("일일 퍼즐 완성은 별도 기록을 저장하고 캠페인 진도는 바꾸지 않는다", () => {
   const save = normalizeSave({ level: 12, records: { 'garden:11': 23 } });
   assert.equal(recordWin(save, campaignWin({ mode: 'daily', seed: 'daily:2026-11-04' })), true);
   assert.equal(save.level, 12);
@@ -83,7 +83,7 @@ test('daily wins store their own records without advancing campaign progress', (
   assert.equal(Object.hasOwn(save.records, 'daily:2026-11-05'), false);
 });
 
-test('normalization keeps only exact nonnegative move records and valid completion entries', () => {
+test("저장값을 정리할 때 정확한 음이 아닌 정수 회전 수와 유효한 완성 정보만 유지한다", () => {
   const save = normalizeSave({
     records: { 'garden:1': 0, 'garden:2': 12, 'garden:3': -1, 'garden:4': 1.5, 'garden:5': '7', 'garden:6': Infinity },
     completions: {
@@ -104,7 +104,7 @@ test('normalization keeps only exact nonnegative move records and valid completi
   });
 });
 
-test('completion stars use the design par and assistance, including threshold boundaries', () => {
+test("완성 꽃 등급은 경계값까지 설계 기준과 도움 사용 여부에 따라 정한다", () => {
   assert.equal(completionStars(9, 10, false), 3);
   assert.equal(completionStars(10, 10, false), 3);
   assert.equal(completionStars(11, 10, false), 2);
@@ -118,7 +118,7 @@ test('completion stars use the design par and assistance, including threshold bo
   assert.equal(completionStars(10, undefined, false), 1);
 });
 
-test('replays retain the best stars and prefer an unassisted run for tied stars', () => {
+test("재도전은 최고 꽃 등급을 유지하고 같은 등급이면 도움 없는 완성을 우선한다", () => {
   const save = normalizeSave({ level: 999 });
   recordWin(save, campaignWin({ moves: 50, usedHint: true }));
   assert.deepEqual(save.completions['garden:999'], { stars: 1, assisted: true });
@@ -134,7 +134,7 @@ test('replays retain the best stars and prefer an unassisted run for tied stars'
   assert.equal(save.records['garden:999'], 42);
 });
 
-test('statistics count unique gardens, total stars and assisted daily completions', () => {
+test("통계는 중복 없는 정원 수와 모은 꽃 및 도움을 쓴 일일 완성을 집계한다", () => {
   const save = normalizeSave({ completions: {
     'garden:1': { stars: 3, assisted: false },
     'garden:2': { stars: 2, assisted: false },
@@ -147,7 +147,7 @@ test('statistics count unique gardens, total stars and assisted daily completion
   assert.equal(gardenStats(save, '2026-11-04').completed, 5);
 });
 
-test('daily streak stays live until the next Korean day ends, then resets after a gap', () => {
+test("일일 연속 기록은 한국 시간 다음 날이 끝날 때까지 유지되고 하루를 놓치면 초기화된다", () => {
   const save = normalizeSave({ completions: {
     'daily:2026-10-30': { stars: 1, assisted: false },
     'daily:2026-10-31': { stars: 2, assisted: false },
@@ -159,7 +159,7 @@ test('daily streak stays live until the next Korean day ends, then resets after 
   assert.deepEqual(gardenStats(normalizeSave(null), '2026-11-04'), { completed: 0, totalStars: 0, dailyStreak: 0, campaignCompleted: 0, freeCompleted: 0 });
 });
 
-test('completion entries survive JSON storage without sharing the original nested objects', () => {
+test("완성 정보는 제이슨 저장 후 원본 내부 객체와 분리된 채 유지된다", () => {
   const stored = { level: 4, completions: { 'garden:3': { stars: 2, assisted: true } } };
   const save = normalizeSave(JSON.parse(JSON.stringify(stored)));
   save.completions['garden:3'].stars = 3;
@@ -168,7 +168,7 @@ test('completion entries survive JSON storage without sharing the original neste
   assert.deepEqual(restored, save);
 });
 
-test('shared campaign copies keep free records and stars without unlocking campaign levels', () => {
+test("공유 캠페인 복사본은 자유 정원 기록과 꽃만 저장하고 캠페인 단계를 열지 않는다", () => {
   const seed = `free:${encodeChallenge({ mode: 'campaign', level: 999 })}`;
   const save = normalizeSave({ level: 4, records: { 'garden:3': 24 } });
   assert.equal(recordWin(save, campaignWin({ seed, mode: 'free' })), true);
@@ -182,7 +182,7 @@ test('shared campaign copies keep free records and stars without unlocking campa
   });
 });
 
-test('shared daily copies do not extend or replace the live daily streak', () => {
+test("공유 일일 퍼즐 복사본은 실제 일일 연속 기록을 늘리거나 대체하지 않는다", () => {
   const save = normalizeSave({ level: 12, completions: {
     'daily:2026-11-02': { stars: 3, assisted: false },
     'daily:2026-11-03': { stars: 2, assisted: false },
@@ -196,7 +196,7 @@ test('shared daily copies do not extend or replace the live daily streak', () =>
   assert.equal(gardenStats(save, '2026-11-04').freeCompleted, 1);
 });
 
-test('valid free challenge records and completion medals survive normalization and JSON storage', () => {
+test("유효한 자유 퍼즐 기록과 완성 꽃은 저장값 정리와 제이슨 저장 후에도 유지된다", () => {
   const seed = `free:${encodeChallenge({ mode: 'free', size: 5, seed: '꽃 정원' })}`;
   const copySeed = `free:${encodeChallenge({ mode: 'daily', date: '2026-11-03' })}`;
   const save = normalizeSave({ level: 7, records: { [seed]: 26, [copySeed]: 30 }, completions: {
@@ -213,7 +213,7 @@ test('valid free challenge records and completion medals survive normalization a
   });
 });
 
-test('invalid free codes cannot become stored records or completion medals', () => {
+test("잘못된 자유 퍼즐 코드는 기록이나 완성 꽃으로 저장할 수 없다", () => {
   const invalidSeeds = ['free:', 'free:CB1.', 'free:CB1.not-valid-code', 'free:CB2.invalid', 'free:4:unencoded'];
   const save = normalizeSave({
     records: Object.fromEntries(invalidSeeds.map((seed) => [seed, 10])),
@@ -226,7 +226,7 @@ test('invalid free codes cannot become stored records or completion medals', () 
   });
 });
 
-test('replaying a free challenge improves its medal without duplicating garden or star totals', () => {
+test("자유 퍼즐 재도전은 정원 수나 모은 꽃을 중복 집계하지 않고 꽃 등급을 개선한다", () => {
   const seed = `free:${encodeChallenge({ mode: 'free', size: 4, seed: '반짝이는 오후' })}`;
   const save = normalizeSave({ level: 5 });
   recordWin(save, campaignWin({ seed, mode: 'free', usedHint: true }));

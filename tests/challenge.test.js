@@ -5,7 +5,7 @@ import { normalizeChallenge, puzzleKey, encodeChallenge, decodeChallenge, freeRe
 
 const rawCode = (value) => 'CB1.' + btoa(value).replaceAll('+', '-').replaceAll('/', '_').replace(/=+$/, '');
 
-test('campaign challenge sizes follow the existing progression without unsafe levels', () => {
+test("캠페인 퍼즐 크기는 기존 단계 구성을 따르며 안전 범위를 벗어난 단계는 거부한다", () => {
   for (const [level, size] of [[1, 4], [3, 4], [4, 5], [11, 5], [12, 6], [1000, 6], [Number.MAX_SAFE_INTEGER, 6]]) {
     assert.deepEqual(normalizeChallenge({ mode: 'campaign', level }), { mode: 'campaign', level, size });
   }
@@ -14,7 +14,7 @@ test('campaign challenge sizes follow the existing progression without unsafe le
   }
 });
 
-test('daily challenges validate dates including leap years and accept past dates', () => {
+test("일일 퍼즐은 윤년까지 날짜를 검증하며 지난 날짜도 허용한다", () => {
   for (const date of ['2024-02-29', '2020-01-01', '2026-11-04']) {
     assert.deepEqual(normalizeChallenge({ mode: 'daily', date }), { mode: 'daily', date, size: 5 });
   }
@@ -23,7 +23,7 @@ test('daily challenges validate dates including leap years and accept past dates
   }
 });
 
-test('free seeds trim and normalize NFC while counting full Unicode code points', () => {
+test("자유 씨앗은 앞뒤 공백을 제거하고 유니코드 정준 결합형으로 맞춘 뒤 글자 수를 센다", () => {
   assert.deepEqual(normalizeChallenge({ mode: 'free', size: 5, seed: '  e\u0301 🌱  ' }), { mode: 'free', size: 5, seed: 'é 🌱' });
   assert.equal(normalizeChallenge({ mode: 'free', size: 4, seed: '🌱'.repeat(40) }).seed, '🌱'.repeat(40));
   assert.equal(normalizeChallenge({ mode: 'free', size: 4, seed: '🌱'.repeat(41) }), null);
@@ -33,13 +33,13 @@ test('free seeds trim and normalize NFC while counting full Unicode code points'
   }
 });
 
-test('free seeds reject controls even when trimming would hide them', () => {
+test("자유 씨앗은 공백 제거로 숨겨질 수 있는 제어 문자도 거부한다", () => {
   for (const seed of ['\0garden', '\tgarden', '\ngarden', 'gar\rden', 'garden\u007f', '\u0085garden', '\u2028garden', 'garden\u2029']) {
     assert.equal(normalizeChallenge({ mode: 'free', size: 4, seed }), null);
   }
 });
 
-test('challenge codes round-trip every mode and preserve deterministic puzzle masks', () => {
+test("모든 모드의 퍼즐 코드를 저장하고 복원해도 같은 회로가 생성된다", () => {
   const inputs = [
     { mode: 'campaign', level: 2 },
     { mode: 'campaign', level: 5 },
@@ -60,7 +60,7 @@ test('challenge codes round-trip every mode and preserve deterministic puzzle ma
   }
 });
 
-test('encoding is canonical across NFC, whitespace and irrelevant descriptor fields', () => {
+test("유니코드 표현과 앞뒤 공백 또는 불필요한 정보가 달라도 같은 코드로 변환한다", () => {
   const input = { mode: 'free', size: 5, seed: 'é 정원' };
   const variant = { ignored: '<script>', seed: '  e\u0301 정원  ', size: 5, mode: 'free' };
   assert.equal(encodeChallenge(input), encodeChallenge(variant));
@@ -69,7 +69,7 @@ test('encoding is canonical across NFC, whitespace and irrelevant descriptor fie
   assert.equal(encodeChallenge({ mode: 'campaign', level: 1, size: 6 }), encodeChallenge({ mode: 'campaign', level: 1 }));
 });
 
-test('free puzzle identities include size and encode reserved seed characters safely', () => {
+test("자유 퍼즐 식별값은 크기를 포함하고 씨앗의 예약 문자를 안전하게 변환한다", () => {
   const small = { mode: 'free', size: 4, seed: 'a/b %' };
   const large = { ...small, size: 6 };
   assert.equal(puzzleKey(small), 'free:4:a%2Fb%20%25');
@@ -78,7 +78,7 @@ test('free puzzle identities include size and encode reserved seed characters sa
   assert.equal(challengeFromPuzzle({ seed: puzzleKey(small), size: 6 }), null);
 });
 
-test('decoding rejects wrong versions, malformed base64, JSON and UTF-8', () => {
+test("버전이나 베이스64 또는 제이슨과 유티에프8 형식이 잘못된 코드는 복원하지 않는다", () => {
   const valid = encodeChallenge({ mode: 'campaign', level: 1 });
   for (const value of [null, 7, '', valid.replace('CB1.', 'CB2.'), 'CB1.', 'CB1.a', 'CB1.%%%', `${valid}=`, rawCode('{'), rawCode('null'), rawCode('[]'), rawCode('{}'), rawCode(String.fromCharCode(255))]) {
     assert.equal(decodeChallenge(value), null);
@@ -91,7 +91,7 @@ test('decoding rejects wrong versions, malformed base64, JSON and UTF-8', () => 
   }
 });
 
-test('decoding enforces the 1024-character boundary and canonical base64 pad bits', () => {
+test("코드 복원은 1024자 제한과 베이스64의 올바른 채움 비트를 검증한다", () => {
   const json = JSON.stringify({ mode: 'campaign', level: 1 });
   const boundary = rawCode(json.padEnd(765, ' '));
   assert.equal(boundary.length, 1024);
@@ -104,7 +104,7 @@ test('decoding enforces the 1024-character boundary and canonical base64 pad bit
   assert.equal(decodeChallenge(alias), null);
 });
 
-test('puzzle descriptors reject malformed keys and mismatching board sizes', () => {
+test("퍼즐 정보는 잘못된 식별값과 일치하지 않는 격자 크기를 거부한다", () => {
   for (const puzzle of [null, {}, { seed: 1, size: 4 }, { seed: 'garden:01', size: 4 },
     { seed: 'garden:9007199254740992', size: 6 }, { seed: 'garden:1', size: 5 },
     { seed: 'daily:2026-11-04', size: 4 }, { seed: 'daily:2026-02-31', size: 5 },
@@ -115,7 +115,7 @@ test('puzzle descriptors reject malformed keys and mismatching board sizes', () 
   }
 });
 
-test('shared copies retain original masks and descriptors in an isolated record namespace', () => {
+test("공유 복사본은 원본 회로와 정보를 유지하며 기록은 별도로 구분한다", () => {
   for (const input of [{ mode: 'campaign', level: 1 }, { mode: 'daily', date: '2020-01-01' }, { mode: 'free', size: 6, seed: '친구의 정원 🌱' }]) {
     const challenge = normalizeChallenge(input);
     const source = generatePuzzle(puzzleKey(challenge), challenge.size);

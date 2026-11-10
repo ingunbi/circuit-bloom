@@ -19,13 +19,13 @@ function clockAt(iso) {
   };
 }
 
-test('daily timer targets Korean midnight, including the exact boundary', () => {
+test("일일 타이머는 정확한 날짜 경계까지 한국 시간 자정을 기준으로 작동한다", () => {
   assert.equal(millisecondsUntilNextKstDay(new Date('2026-11-03T14:59:59.999Z')), 1);
   assert.equal(millisecondsUntilNextKstDay(new Date('2026-11-03T15:00:00Z')), 86400000);
   assert.equal(millisecondsUntilNextKstDay(new Date('2026-11-03T00:00:00Z')), 54000000);
 });
 
-test('an open game receives one change at Korean midnight and rearms its timer', () => {
+test("열린 게임은 한국 시간 자정에 한 번 갱신되고 다음 타이머를 예약한다", () => {
   const clock = clockAt('2026-11-03T14:59:59.999Z');
   assert.equal(clock.scheduled.delay, 1);
   clock.set('2026-11-03T15:00:00Z');
@@ -36,7 +36,7 @@ test('an open game receives one change at Korean midnight and rearms its timer',
   assert.deepEqual(clock.changes, ['2026-11-04']);
 });
 
-test('focus checks catch suspended timers without resetting a same-day puzzle', () => {
+test("화면 복귀 검사는 멈춘 타이머를 보완하고 같은 날 퍼즐은 초기화하지 않는다", () => {
   const clock = clockAt('2026-11-03T14:59:59Z');
   clock.watcher.check();
   assert.deepEqual(clock.changes, []);

@@ -8,7 +8,7 @@ import {
 const puzzle = generatePuzzle('garden:session-test', 4);
 const copy = (data) => JSON.parse(JSON.stringify(data));
 
-test('new sessions derive their board from the original puzzle without mutating it', () => {
+test("새 진행 상태는 원본 퍼즐을 바꾸지 않고 회로를 구성한다", () => {
   const session = createSession(puzzle);
   const original = [...puzzle.masks];
   assert.equal(session.seed, puzzle.seed);
@@ -22,7 +22,7 @@ test('new sessions derive their board from the original puzzle without mutating 
   assert.deepEqual(puzzle.masks, original);
 });
 
-test('source and invalid rotations leave the session unchanged', () => {
+test("전원 타일과 잘못된 회전 요청은 진행 상태를 바꾸지 않는다", () => {
   const session = createSession(puzzle);
   const original = copy(session);
   for (const index of [puzzle.source, -1, 16, 0.5, NaN, '0']) {
@@ -35,7 +35,7 @@ test('source and invalid rotations leave the session unchanged', () => {
   assert.deepEqual(session, original);
 });
 
-test('undo and redo restore board orientation and move totals in stack order', () => {
+test("되돌리기와 다시 하기는 이력 순서대로 회로 방향과 회전 수를 복원한다", () => {
   const session = createSession(puzzle);
   assert.equal(undoTurn(puzzle, session), false);
   assert.equal(redoTurn(puzzle, session), false);
@@ -57,7 +57,7 @@ test('undo and redo restore board orientation and move totals in stack order', (
   assert.deepEqual(sessionMasks(puzzle, session), completedMasks);
 });
 
-test('new rotations replace the redo branch while hint use remains sticky', () => {
+test("새 회전은 다시 하기 이력을 대체하고 도움 사용 여부는 유지한다", () => {
   const session = createSession(puzzle);
   applyTurn(puzzle, session, 0, 2, true);
   assert.equal(undoTurn(puzzle, session), true);
@@ -70,7 +70,7 @@ test('new rotations replace the redo branch while hint use remains sticky', () =
   assert.equal(restoreSession(puzzle, copy(session)).usedHint, true);
 });
 
-test('sessions and redo history survive a JSON round trip with independent objects', () => {
+test("진행 상태와 다시 하기 이력은 제이슨 저장 후 독립된 객체로 복원된다", () => {
   const session = createSession(puzzle);
   applyTurn(puzzle, session, 0, 3);
   applyTurn(puzzle, session, 1, 2, true);
@@ -87,7 +87,7 @@ test('sessions and redo history survive a JSON round trip with independent objec
   assert.equal(stored.history[0].count, 3);
 });
 
-test('saved sessions cannot be restored into another level, day, or grid size', () => {
+test("저장한 진행 상태는 다른 단계나 날짜 또는 격자 크기에 복원할 수 없다", () => {
   const daily = generatePuzzle('daily:2026-11-04', 5);
   const stored = createSession(daily);
   assert.equal(restoreSession(generatePuzzle('daily:2026-11-05', 5), stored), null);
@@ -95,7 +95,7 @@ test('saved sessions cannot be restored into another level, day, or grid size', 
   assert.equal(restoreSession(puzzle, stored), null);
 });
 
-test('restoration rejects corrupt shape, counters, and rotation histories', () => {
+test("형식이나 회전 수 또는 회전 이력이 손상된 진행 상태는 복원하지 않는다", () => {
   const session = createSession(puzzle);
   applyTurn(puzzle, session, 0, 2);
   for (const invalid of [null, undefined, false, [], 'session', 4]) {
@@ -116,7 +116,7 @@ test('restoration rejects corrupt shape, counters, and rotation histories', () =
   }
 });
 
-test('counterclockwise rotations cost one move per quarter turn and can be undone', () => {
+test("반시계 방향 회전도 사분의 일 바퀴당 한 번으로 세고 되돌릴 수 있다", () => {
   const session = createSession(puzzle);
   assert.equal(applyTurn(puzzle, session, 0, -1), true);
   assert.equal(session.moves, 1);
@@ -136,7 +136,7 @@ test('counterclockwise rotations cost one move per quarter turn and can be undon
   assert.equal(session.turns[0], -1);
 });
 
-test('pinned tiles reject manual and assisted rotations without spending moves', () => {
+test("고정한 타일은 회전 수를 늘리지 않고 직접 회전과 도움 회전을 거부한다", () => {
   const session = createSession(puzzle);
   assert.equal(toggleLock(puzzle, session, puzzle.source), false);
   assert.equal(toggleLock(puzzle, session, -1), false);
@@ -155,7 +155,7 @@ test('pinned tiles reject manual and assisted rotations without spending moves',
   assert.equal(session.moves, 2);
 });
 
-test('pin changes share undo and redo history while leaving move totals unchanged', () => {
+test("고정과 해제도 되돌리기 이력을 공유하며 회전 수는 바꾸지 않는다", () => {
   const session = createSession(puzzle);
   applyTurn(puzzle, session, 0, -3);
   toggleLock(puzzle, session, 0);
@@ -176,7 +176,7 @@ test('pin changes share undo and redo history while leaving move totals unchange
   assert.equal(redoTurn(puzzle, session), false);
 });
 
-test('signed rotations and pin histories survive JSON with independently cloned state', () => {
+test("양방향 회전과 고정 이력은 제이슨 저장 후 독립된 상태로 복원된다", () => {
   const session = createSession(puzzle);
   applyTurn(puzzle, session, 0, -2, true);
   toggleLock(puzzle, session, 0);
@@ -195,7 +195,7 @@ test('signed rotations and pin histories survive JSON with independently cloned 
   assert.equal(stored.history[1].locked, true);
 });
 
-test('legacy sessions without pins restore with every tile unlocked', () => {
+test("고정 정보가 없는 이전 진행 상태는 모든 타일을 해제한 채 복원한다", () => {
   const legacy = createSession(puzzle);
   applyTurn(puzzle, legacy, 0, 3);
   applyTurn(puzzle, legacy, 1, 1);
@@ -208,7 +208,7 @@ test('legacy sessions without pins restore with every tile unlocked', () => {
   assert.equal(restored.moves, 4);
 });
 
-test('restoration rejects impossible lock transitions and future rotations on pinned tiles', () => {
+test("불가능한 고정 변경이나 고정 타일의 이후 회전 이력이 있으면 복원하지 않는다", () => {
   const session = createSession(puzzle);
   toggleLock(puzzle, session, 0);
   assert.equal(restoreSession(puzzle, { ...copy(session), locked: new Array(16).fill(false) }), null);
@@ -234,7 +234,7 @@ test('restoration rejects impossible lock transitions and future rotations on pi
   assert.equal(restoreSession(puzzle, { ...copy(session), future: [...future].reverse() }), null);
 });
 
-test('both history stacks reject invalid actions and disguised hint usage', () => {
+test("되돌리기와 다시 하기 이력 모두 잘못된 동작과 숨겨진 도움 사용을 거부한다", () => {
   const session = createSession(puzzle);
   for (const action of [
     null, [], { index: puzzle.source, count: 1, assisted: false },
@@ -255,7 +255,7 @@ test('both history stacks reject invalid actions and disguised hint usage', () =
   assert.equal(restoreSession(puzzle, { ...copy(session), future: new Array(1) }), null);
 });
 
-test('saved masks are ignored so restored circuits always match their valid rotations', () => {
+test("저장된 회로 모양은 무시하고 유효한 회전 이력에 맞춰 회로를 복원한다", () => {
   const session = createSession(puzzle);
   applyTurn(puzzle, session, 0, 2);
   const stored = { ...copy(session), masks: new Array(16).fill(15) };
@@ -264,7 +264,7 @@ test('saved masks are ignored so restored circuits always match their valid rota
   assert.equal(Object.hasOwn(restored, 'masks'), false);
 });
 
-test('history size and unsafe arithmetic are bounded', () => {
+test("이력 크기와 안전 범위를 벗어나는 수치 계산을 제한한다", () => {
   const session = createSession(puzzle);
   for (let i = 0; i < MAX_SESSION_ACTIONS; i++) assert.equal(applyTurn(puzzle, session, 0), true);
   assert.equal(applyTurn(puzzle, session, 0), false);
