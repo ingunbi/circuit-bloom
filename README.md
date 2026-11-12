@@ -14,7 +14,7 @@ npm run build
 npm run preview
 ```
 
-`dist/`가 독립 정적 웹사이트이며, Vite의 상대 경로 설정으로 포털의 `/games/circuit-bloom/` 하위에서도 실행됩니다. `wrangler.jsonc`는 Cloudflare 정적 배포용 설정입니다.
+`dist/`가 독립 정적 웹사이트이며, Vite의 상대 경로 설정으로 포털의 `/games/circuit-bloom/` 하위에서도 실행됩니다. `wrangler.jsonc`는 Cloudflare 정적 배포용 설정입니다. `npm run dev:cloudflare`(빌드 후 Workers 런타임 로컬 실행), `npm run check:cloudflare`(배포 설정 dry-run, 로그인 불필요), `npm run deploy:cloudflare`(배포, `wrangler login` 필요)를 사용합니다.
 
 ## 플레이
 
